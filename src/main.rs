@@ -26,10 +26,10 @@ fn main() {
                 .set(ImagePlugin::default_nearest()),
         )
         .init_state::<AppState>()
-        .register_type::<Health>()
+        .register_type::<(Health, Projectile, Speed, Velocity)>()
         .add_systems(Startup, setup)
         .add_systems(Update, (player_aim, player_shoot))
-        .add_systems(FixedUpdate, player_move)
+        .add_systems(FixedUpdate, (player_move, projectile_move))
         ;
 
     #[cfg(debug_assertions)] // debug/dev builds only
@@ -48,6 +48,10 @@ impl Default for Health {
         Health(100.0)
     }
 }
+
+#[derive(Component, Reflect)]
+pub struct Velocity(Vec2);
+
 #[derive(Component, Reflect)]
 pub struct Speed(f32);
 
@@ -133,8 +137,11 @@ fn player_shoot(
     q_player: Query<&Transform, With<Player>>
 ) {
     for ev in mouse_btn_event.read() {
-        let transform = q_player.single();
         if (ev.button == MouseButton::Left) &&  (ev.state == ButtonState::Pressed) {
+            let transform = q_player.single();
+            let aim_vector = get_aim_vector(
+                transform.translation.truncate(), transform.rotation.to_euler(EulerRot::XYZ).2
+            );
             commands.spawn((
                 Projectile,
                 Sprite {
@@ -146,8 +153,26 @@ fn player_shoot(
                     rotation: transform.rotation,
                     ..default()
                 },
+                Velocity(aim_vector),
                 Speed(5.0)
             ));
+            info!("Projectile spawn with velocity: {}", aim_vector);
         }
     }
+}
+
+fn projectile_move (
+    mut q_projectile: Query<(&mut Transform, &Velocity, &Speed), With<Projectile>>,
+    time: Res<Time>,
+) {
+    for (mut transform, velocity, speed) in q_projectile.iter_mut() {
+        transform.translation.x += 100.0 * velocity.0.x * speed.0 * time.delta_secs();
+        transform.translation.y += 100.0 * velocity.0.y * speed.0 * time.delta_secs();
+    }
+}
+
+fn get_aim_vector(position: Vec2, z_rotation: f32) -> Vec2 {
+    let aim_x = z_rotation.cos();
+    let aim_y = z_rotation.sin();
+    Vec2::new(aim_x, aim_y).normalize()
 }
