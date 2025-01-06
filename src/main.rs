@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use bevy::input::mouse::MouseButtonInput;
+use bevy::input::ButtonState;
 
 mod consts;
 use consts::AppState;
@@ -26,7 +28,8 @@ fn main() {
         .init_state::<AppState>()
         .register_type::<Health>()
         .add_systems(Startup, setup)
-        .add_systems(Update, (player_move, player_aim))
+        .add_systems(Update, (player_aim, player_shoot))
+        .add_systems(FixedUpdate, player_move)
         ;
 
     #[cfg(debug_assertions)] // debug/dev builds only
@@ -119,8 +122,32 @@ fn player_aim(
     }
 }
 
+#[derive(Component, Reflect)]
+#[require(Sprite, Name(|| "Projectile"), Speed)]
+pub struct Projectile;
+
 fn player_shoot(
-    q_player: Query<&Transform, With<Player>>,
-    q_window: Query<&Window, With<PrimaryWindow>>,
-    q_camera: Query<(&Camera, &GlobalTransform)>
-)
+    mut commands: Commands,
+    mut mouse_btn_event: EventReader<MouseButtonInput>,
+    assets: Res<AssetServer>,
+    q_player: Query<&Transform, With<Player>>
+) {
+    for ev in mouse_btn_event.read() {
+        let transform = q_player.single();
+        if (ev.button == MouseButton::Left) &&  (ev.state == ButtonState::Pressed) {
+            commands.spawn((
+                Projectile,
+                Sprite {
+                    image: assets.load("sprites/projectiles/missile.png"),
+                    ..default()
+                },
+                Transform {
+                    translation: Vec3::new(transform.translation.x, transform.translation.y, 0.0),
+                    rotation: transform.rotation,
+                    ..default()
+                },
+                Speed(5.0)
+            ));
+        }
+    }
+}

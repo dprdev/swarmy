@@ -12,3 +12,12 @@ Cargo.lock
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+.idea/workspace.xml~
+.idea/workspace.xml
+.idea/vcs.xml
+.idea/swarmy.iml
+.idea/ProjectAlpha.iml
+.idea/modules.xml
+.idea/modules.xml
+.idea/ProjectAlpha.iml
+.idea/vcs.xml
