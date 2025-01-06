@@ -21,3 +21,4 @@ Cargo.lock
 .idea/modules.xml
 .idea/ProjectAlpha.iml
 .idea/vcs.xml
+/.idea
