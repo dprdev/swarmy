@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy::input::mouse::MouseButtonInput;
+use bevy::input::mouse::{MouseButtonInput, MouseWheel, MouseScrollUnit};
 use bevy::input::ButtonState;
 
 mod consts;
@@ -200,6 +200,25 @@ fn projectile_despawn (
     for (entity, displacement, range) in q_projectile.iter_mut() {
         if displacement.0 > range.0 {
             commands.entity(entity).despawn();
+        }
+    }
+}
+
+fn camera_zoom(
+    mut mouse_scroll_event: EventReader<MouseWheel>,
+    mut q_camera: Query<&mut OrthographicProjection, With<Camera>>,
+) {
+    for event in mouse_scroll_event.read() {
+        match event.unit {
+            MouseScrollUnit::Line => {
+                //TODO
+            }
+            MouseScrollUnit::Pixel => {
+                //TODO
+            }
+        }
+        if let Some(projection) = q_camera.single_mut() {
+            projection.scale(1.0);
         }
     }
 }
