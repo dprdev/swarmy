@@ -26,10 +26,10 @@ fn main() {
                 .set(ImagePlugin::default_nearest()),
         )
         .init_state::<AppState>()
-        .register_type::<(Health, Projectile, Speed, Velocity)>()
+        .register_type::<(Health, Projectile, Speed, Velocity, Displacement, Range)>()
         .add_systems(Startup, setup)
         .add_systems(Update, (player_aim, player_shoot))
-        .add_systems(FixedUpdate, (player_move, projectile_move))
+        .add_systems(FixedUpdate, (player_move, projectile_move, projectile_despawn))
         ;
 
     #[cfg(debug_assertions)] // debug/dev builds only
@@ -127,8 +127,25 @@ fn player_aim(
 }
 
 #[derive(Component, Reflect)]
-#[require(Sprite, Name(|| "Projectile"), Speed)]
-pub struct Projectile;
+#[require(Sprite, Speed, Displacement, Range, Name(|| "Projectile"))]
+pub struct Projectile{}
+
+#[derive(Component, Reflect)]
+pub struct Displacement(f32);
+
+impl Default for Displacement {
+    fn default() -> Self { Displacement(0.0) }
+}
+
+#[derive(Component, Reflect)]
+pub struct Range(f32);
+
+impl Default for Range {
+    fn default() -> Self { Range(10.0) }
+}
+
+#[derive(Component, Reflect)]
+pub struct Damage(f32);
 
 fn player_shoot(
     mut commands: Commands,
@@ -139,11 +156,10 @@ fn player_shoot(
     for ev in mouse_btn_event.read() {
         if (ev.button == MouseButton::Left) &&  (ev.state == ButtonState::Pressed) {
             let transform = q_player.single();
-            let aim_vector = get_aim_vector(
-                transform.translation.truncate(), transform.rotation.to_euler(EulerRot::XYZ).2
+            let direction = get_direction(transform.rotation.to_euler(EulerRot::XYZ).2
             );
             commands.spawn((
-                Projectile,
+                Projectile {},
                 Sprite {
                     image: assets.load("sprites/projectiles/missile.png"),
                     ..default()
@@ -153,26 +169,37 @@ fn player_shoot(
                     rotation: transform.rotation,
                     ..default()
                 },
-                Velocity(aim_vector),
+                Velocity(direction),
                 Speed(5.0)
             ));
-            info!("Projectile spawn with velocity: {}", aim_vector);
         }
     }
 }
 
 fn projectile_move (
-    mut q_projectile: Query<(&mut Transform, &Velocity, &Speed), With<Projectile>>,
+    mut q_projectile: Query<(&mut Transform, &mut Displacement, &Velocity, &Speed), With<Projectile>>,
     time: Res<Time>,
 ) {
-    for (mut transform, velocity, speed) in q_projectile.iter_mut() {
+    for (mut transform, mut displacement, velocity, speed) in q_projectile.iter_mut() {
         transform.translation.x += 100.0 * velocity.0.x * speed.0 * time.delta_secs();
         transform.translation.y += 100.0 * velocity.0.y * speed.0 * time.delta_secs();
+        displacement.0 += speed.0 * time.delta_secs();
     }
 }
 
-fn get_aim_vector(position: Vec2, z_rotation: f32) -> Vec2 {
+fn get_direction(z_rotation: f32) -> Vec2 {
     let aim_x = z_rotation.cos();
     let aim_y = z_rotation.sin();
     Vec2::new(aim_x, aim_y).normalize()
+}
+
+fn projectile_despawn (
+    mut commands: Commands,
+    mut q_projectile: Query<(Entity, &Displacement, &Range), With<Projectile>>
+) {
+    for (entity, displacement, range) in q_projectile.iter_mut() {
+        if displacement.0 > range.0 {
+            commands.entity(entity).despawn();
+        }
+    }
 }
