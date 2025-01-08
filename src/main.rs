@@ -28,7 +28,7 @@ fn main() {
         .init_state::<AppState>()
         .register_type::<(Health, Projectile, Speed, Velocity, Displacement, Range)>()
         .add_systems(Startup, setup)
-        .add_systems(Update, (player_aim, player_shoot))
+        .add_systems(Update, (player_aim, player_shoot, camera_zoom))
         .add_systems(FixedUpdate, (player_move, projectile_move, projectile_despawn))
         ;
 
@@ -176,7 +176,7 @@ fn player_shoot(
     }
 }
 
-fn projectile_move (
+fn projectile_move(
     mut q_projectile: Query<(&mut Transform, &mut Displacement, &Velocity, &Speed), With<Projectile>>,
     time: Res<Time>,
 ) {
@@ -193,7 +193,7 @@ fn get_direction(z_rotation: f32) -> Vec2 {
     Vec2::new(aim_x, aim_y).normalize()
 }
 
-fn projectile_despawn (
+fn projectile_despawn(
     mut commands: Commands,
     mut q_projectile: Query<(Entity, &Displacement, &Range), With<Projectile>>
 ) {
@@ -209,16 +209,14 @@ fn camera_zoom(
     mut q_camera: Query<&mut OrthographicProjection, With<Camera>>,
 ) {
     for event in mouse_scroll_event.read() {
+        let mut projection = q_camera.single_mut();
         match event.unit {
             MouseScrollUnit::Line => {
-                //TODO
+                projection.scale += event.y;
             }
             MouseScrollUnit::Pixel => {
-                //TODO
+                projection.scale += (event.y/100.0);
             }
-        }
-        if let Some(projection) = q_camera.single_mut() {
-            projection.scale(1.0);
         }
     }
 }
