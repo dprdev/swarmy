@@ -3,7 +3,6 @@ use bevy::{
     prelude::*,
     text::FontSmoothing,
 };
-use crate::consts::AppState;
 use bevy_inspector_egui::quick::{StateInspectorPlugin, WorldInspectorPlugin};
 
 pub struct DebugPlugin;

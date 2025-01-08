@@ -3,10 +3,14 @@ name = "Swarmy"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+dev = ["bevy/dynamic_linking", "bevy/file_watcher", "bevy/asset_processor", "bevy/bevy_dev_tools"]
+
 # Enable max optimizations for dependencies, but not for our code:
 [profile.dev.package."*"]
-opt-level = 3
+opt-level = 2
 
 [dependencies]
-bevy = { version = "0.15.1", features = ["bevy_dev_tools", "dynamic_linking"] }
+avian2d = "0.2.0"
+bevy = "0.15.1"
 bevy-inspector-egui = "0.28.1"
