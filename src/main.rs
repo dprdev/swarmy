@@ -38,9 +38,9 @@ fn main() {
         ))
         .init_state::<AppState>()
         .register_type::<(Health, Projectile, Building)>()
-        .add_event::<PlayerMovementAction>()
-        .add_event::<PlayerAttackAction>()
-        .add_event::<CameraAction>()
+        .add_event::<PlayerMovementEvent>()
+        .add_event::<PlayerAttackEvent>()
+        .add_event::<CameraEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, (player_attack, camera_zoom, keyboard_input, mouse_input, mouse_wheel_input))
         .add_systems(FixedUpdate, (player_move, player_aim, projectile_move, projectile_despawn, print_collisions))
@@ -69,13 +69,14 @@ fn setup(
     ));
     commands.spawn((
         Building,
+        Name::new("Building".to_string()),
         Sprite {
             image: assets.load("sprites/hatchery/hatchery.png"),
             ..default()
         },
         Transform::from_xyz(0., 200., 0.),
         RigidBody::Static,
-        Collider::rectangle(200., 200.)
+        Collider::rectangle(84., 84.)
     ));
 }
 

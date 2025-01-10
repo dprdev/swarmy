@@ -13,7 +13,7 @@ use crate::projectile::*;
 pub struct Player;
 
 fn player_collider() -> Collider {
-    Collider::capsule(12.5, 20.0)
+    Collider::capsule(15.0, 20.0)
 }
 
 fn player_rigidbody() -> RigidBody {
@@ -22,12 +22,12 @@ fn player_rigidbody() -> RigidBody {
 
 pub fn player_move(
     mut q_player: Query<(&mut LinearVelocity), With<Player>>,
-    mut player_movement_event_reader: EventReader<PlayerMovementAction>,
+    mut player_movement_event_reader: EventReader<PlayerMovementEvent>,
     time: Res<Time>,
 ) {
     for event in player_movement_event_reader.read() {
         match event {
-            PlayerMovementAction::Move(direction) => {
+            PlayerMovementEvent::Move(direction) => {
                 let mut linear_velocity = q_player.single_mut();
                 linear_velocity.0 = *direction * time.delta_secs() * 10000.0;
             }
@@ -49,8 +49,7 @@ pub fn player_aim(
             // Calculate the angle between the player and the cursor
             let direction = cursor_world_position - player_transform.translation.truncate();
             let aim_angle = direction.y.atan2(direction.x);
-            player_transform.rotation.z = aim_angle;
-            info!("aim angle: {}", aim_angle);
+            player_transform.rotation = Quat::from_rotation_z(aim_angle);
         }
     }
 }
@@ -59,21 +58,21 @@ pub fn player_attack(
     mut commands: Commands,
     assets: Res<AssetServer>,
     q_player: Query<&Transform, With<Player>>,
-    mut player_attack_event_reader: EventReader<PlayerAttackAction>
+    mut player_attack_event_reader: EventReader<PlayerAttackEvent>
 ) {
     for event in player_attack_event_reader.read() {
         match event {
-            PlayerAttackAction::PrimaryFire => {
-                //test
+            PlayerAttackEvent::PrimaryFire => {
+                commands.spawn((
+                    Projectile{
+                        displacement: 0.,
+                        range: 10.,
+                        damage: 1
+                    }
+                    ))
             }
         }
     }
-}
-
-fn get_direction(z_rotation: f32) -> Vec2 {
-    let aim_x = z_rotation.cos();
-    let aim_y = z_rotation.sin();
-    Vec2::new(aim_x, aim_y).normalize()
 }
 
 fn floats_are_equal(a: f32, b: f32, epsilon: f32) -> bool {

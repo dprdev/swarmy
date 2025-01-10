@@ -5,23 +5,23 @@ use bevy::math::Vec2;
 use bevy::prelude::*;
 
 #[derive(Event)]
-pub enum PlayerMovementAction {
+pub enum PlayerMovementEvent {
     Move(Vec2),
 }
 
 #[derive(Event)]
-pub enum PlayerAttackAction {
+pub enum PlayerAttackEvent {
     PrimaryFire,
 }
 
 #[derive(Event)]
-pub enum CameraAction {
+pub enum CameraEvent {
     Zoom(f32),
 }
 
 /// Sends [`PlayerMovementAction`] events based on keyboard input.
 pub fn keyboard_input(
-    mut movement_event_writer: EventWriter<PlayerMovementAction>,
+    mut movement_event_writer: EventWriter<PlayerMovementEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if keyboard_input.is_changed() {
@@ -32,20 +32,21 @@ pub fn keyboard_input(
 
         let horizontal = right as i8 - left as i8;
         let vertical = up as i8 - down as i8;
+
         let direction = Vec2::new(horizontal as Scalar, vertical as Scalar);
-        info!("Moved!");
-        movement_event_writer.send(PlayerMovementAction::Move(direction));
+
+        movement_event_writer.send(PlayerMovementEvent::Move(direction));
     }
 }
 
 pub fn mouse_input(
     mut mouse_btn_event: EventReader<MouseButtonInput>,
-    mut attack_event_writer: EventWriter<PlayerAttackAction>
+    mut attack_event_writer: EventWriter<PlayerAttackEvent>
 ) {
     for event in mouse_btn_event.read() {
         if event.state == ButtonState::Pressed {
             match event.button {
-                MouseButton::Left => {attack_event_writer.send(PlayerAttackAction::PrimaryFire);},
+                MouseButton::Left => {attack_event_writer.send(PlayerAttackEvent::PrimaryFire);},
                 _ => continue
             }
         }
@@ -54,15 +55,15 @@ pub fn mouse_input(
 
 pub fn mouse_wheel_input(
     mut mouse_wheel_event: EventReader<MouseWheel>,
-    mut camera_event_writer: EventWriter<CameraAction>
+    mut camera_event_writer: EventWriter<CameraEvent>
 ) {
     for event in mouse_wheel_event.read() {
         match event.unit {
             MouseScrollUnit::Line => {
-                camera_event_writer.send(CameraAction::Zoom(event.y));
+                camera_event_writer.send(CameraEvent::Zoom(event.y));
             },
             MouseScrollUnit::Pixel => {
-                camera_event_writer.send(CameraAction::Zoom(event.y/100.));
+                camera_event_writer.send(CameraEvent::Zoom(event.y/100.));
             }
         }
     }
