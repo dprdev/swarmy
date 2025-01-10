@@ -1,5 +1,4 @@
-use bevy::math::Vec2;
-use bevy::prelude::{Component, Event, Reflect, States};
+use bevy::prelude::*;
 
 //Global constants
 pub const MIN_CAMERA_ZOOM: f32 = 0.5;

@@ -1,8 +1,6 @@
 use bevy::prelude::*;
-use bevy::input::mouse::MouseButtonInput;
-use bevy::input::ButtonState;
-use bevy::window::PrimaryWindow;
 use avian2d::prelude::*;
+use bevy::window::PrimaryWindow;
 
 use crate::consts::*;
 use crate::input::*;
@@ -21,7 +19,7 @@ fn player_rigidbody() -> RigidBody {
 }
 
 pub fn player_move(
-    mut q_player: Query<(&mut LinearVelocity), With<Player>>,
+    mut q_player: Query<&mut LinearVelocity, With<Player>>,
     mut player_movement_event_reader: EventReader<PlayerMovementEvent>,
     time: Res<Time>,
 ) {
@@ -36,7 +34,7 @@ pub fn player_move(
 }
 
 pub fn player_aim(
-    mut q_player: Query<(&mut Transform), With<Player>>,
+    mut q_player: Query<&mut Transform, With<Player>>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>
 ) {
@@ -63,18 +61,23 @@ pub fn player_attack(
     for event in player_attack_event_reader.read() {
         match event {
             PlayerAttackEvent::PrimaryFire => {
+                let player_transform = q_player.single();
+                let forward = player_transform.rotation * Vec3::X;
+                let spawn_offset = forward * 50.;
+                let projectile_translation = player_transform.translation + spawn_offset;
                 commands.spawn((
-                    Projectile{
-                        displacement: 0.,
-                        range: 10.,
-                        damage: 1
+                    Projectile::default(),
+                    Sprite {
+                        image: assets.load("sprites/projectiles/missile.png"),
+                        ..default()
+                    },
+                    Transform {
+                        translation: projectile_translation,
+                        rotation: player_transform.rotation,
+                        ..default()
                     }
-                    ))
+                ));
             }
         }
     }
-}
-
-fn floats_are_equal(a: f32, b: f32, epsilon: f32) -> bool {
-    (a - b).abs() < epsilon
 }

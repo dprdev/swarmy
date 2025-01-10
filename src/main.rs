@@ -1,8 +1,5 @@
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
-use bevy::input::mouse::{MouseButtonInput, MouseWheel, MouseScrollUnit};
-use bevy::input::ButtonState;
-use avian2d::{math::*, prelude::*};
+use avian2d::prelude::*;
 
 mod consts;
 mod player;
