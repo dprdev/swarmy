@@ -40,7 +40,7 @@ fn main() {
         .add_event::<CameraEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, (camera_zoom, keyboard_input, mouse_input, mouse_wheel_input))
-        .add_systems(FixedUpdate, (player_aim, player_move, player_attack, projectile_move, projectile_cleanup).chain())
+        .add_systems(FixedUpdate, (player_aim, player_move, player_attack, projectile_move, projectile_despawn).chain())
         .add_systems(PostProcessCollisions, print_collisions)
         .insert_resource(Gravity(Vec2::ZERO))
         ;
@@ -74,7 +74,8 @@ fn setup(
         },
         Transform::from_xyz(0., 200., 0.),
         RigidBody::Static,
-        Collider::rectangle(84., 84.)
+        Collider::rectangle(84., 84.),
+        Health(10.)
     ));
 }
 
