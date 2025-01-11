@@ -1,6 +1,7 @@
 use avian2d::prelude::*;
 use avian2d::math::Scalar;
 use bevy::prelude::*;
+use crate::consts::*;
 
 #[derive(Component, Reflect)]
 #[require(Sprite, Name(|| "Projectile"), RigidBody(projectile_rigidbody), Collider(projectile_collider))]
@@ -11,13 +12,16 @@ pub struct Projectile{
     speed: Scalar,
 }
 
+#[derive(Event)]
+pub enum ProjectileCollisionEvent{}
+
 impl Default for Projectile {
     fn default() -> Projectile {
         Projectile {
             displacement: 0.0,
             range: 500.0,
             damage: 1.0,
-            speed: 1000.0,
+            speed: DEFAULT_PROJECTILE_SPEED,
         }
     }
 }
@@ -41,9 +45,9 @@ pub fn projectile_move(
     }
 }
 
-pub fn projectile_despawn(
+pub fn projectile_cleanup(
     mut commands: Commands,
-    q_projectile: Query<(Entity, &Projectile)>
+    q_projectile: Query<(Entity, &Projectile)>,
 ) {
     for (entity, projectile) in q_projectile.iter() {
         if projectile.displacement > projectile.range {

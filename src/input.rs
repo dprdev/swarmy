@@ -19,7 +19,7 @@ pub enum CameraEvent {
     Zoom(f32),
 }
 
-/// Sends [`PlayerMovementAction`] events based on keyboard input.
+/// Sends [`PlayerMovementEvent`] events based on keyboard input.
 pub fn keyboard_input(
     mut movement_event_writer: EventWriter<PlayerMovementEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,

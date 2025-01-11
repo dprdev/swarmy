@@ -39,8 +39,9 @@ fn main() {
         .add_event::<PlayerAttackEvent>()
         .add_event::<CameraEvent>()
         .add_systems(Startup, setup)
-        .add_systems(Update, (player_attack, camera_zoom, keyboard_input, mouse_input, mouse_wheel_input))
-        .add_systems(FixedUpdate, (player_move, player_aim, projectile_move, projectile_despawn, print_collisions))
+        .add_systems(Update, (camera_zoom, keyboard_input, mouse_input, mouse_wheel_input))
+        .add_systems(FixedUpdate, (player_aim, player_move, player_attack, projectile_move, projectile_cleanup).chain())
+        .add_systems(PostProcessCollisions, print_collisions)
         .insert_resource(Gravity(Vec2::ZERO))
         ;
 
@@ -83,6 +84,6 @@ fn print_collisions(mut collision_event_reader: EventReader<Collision>) {
             "Entities {} and {} are colliding",
             contacts.entity1,
             contacts.entity2,
-        );
+     );
     }
 }
