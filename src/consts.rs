@@ -13,7 +13,8 @@ pub enum AppState {
 
 //Custom Components
 #[derive(Component, Reflect)]
-pub struct Health(f32);
+
+pub struct Health(pub f32);
 
 impl Default for Health {
     fn default() -> Self {

@@ -12,9 +12,6 @@ pub struct Projectile{
     speed: Scalar,
 }
 
-#[derive(Event)]
-pub enum ProjectileCollisionEvent{}
-
 impl Default for Projectile {
     fn default() -> Projectile {
         Projectile {
@@ -35,28 +32,37 @@ fn projectile_collider() -> Collider {
 }
 
 pub fn projectile_move(
-    mut q_projectile: Query<(&Transform, &mut LinearVelocity, &mut Projectile)>,
+    mut commands: Commands,
+    mut q_projectile: Query<(Entity, &Transform, &mut LinearVelocity, &mut Projectile)>,
     time: Res<Time>,
 ) {
-    for (projectile_transform, mut velocity, mut projectile) in q_projectile.iter_mut() {
+    for (entity, projectile_transform, mut velocity, mut projectile) in q_projectile.iter_mut() {
         let forward = projectile_transform.rotation * Vec3::X;
         velocity.0 = forward.truncate() * projectile.speed;
         projectile.displacement += velocity.length() * time.delta_secs();
+        if projectile.displacement > projectile.range {
+            commands.entity(entity).despawn();
+        }
     }
 }
 
-pub fn projectile_despawn(
+pub fn projectile_collision(
     mut commands: Commands,
-    q_projectile: Query<(Entity, &Projectile, &CollidingEntities)>
+    q_projectile: Query<(Entity, &Projectile, &CollidingEntities)>,
+    mut q_health: Query<&mut Health, With<Collider>>
 ) {
-    for (entity, projectile, colliding_entities) in q_projectile.iter() {
+    for (projectile_entity, projectile, colliding_entities) in q_projectile.iter() {
         if projectile.displacement > projectile.range {
-            commands.entity(entity).despawn();
+            commands.entity(projectile_entity).despawn();
             continue;
         }
         if !colliding_entities.is_empty() {
-            //projectile_collision_event.send(ProjectileCollisionEvent);
-            commands.entity(entity).despawn();
+            for colliding_entity in colliding_entities.iter() {
+                if let Ok(mut health) = q_health.get_mut(*colliding_entity) {
+                    health.0 -= projectile.damage;
+                }
+            }
+            commands.entity(projectile_entity).despawn();
         }
     }
 }

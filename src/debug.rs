@@ -25,5 +25,16 @@ impl Plugin for DebugPlugin {
             },
         });
         app.add_plugins(PhysicsDebugPlugin::default());
+        app.add_systems(PostProcessCollisions, print_collisions);
+    }
+}
+
+fn print_collisions(mut collision_event_reader: EventReader<Collision>) {
+    for Collision(contacts) in collision_event_reader.read() {
+        println!(
+            "Entities {} and {} are colliding",
+            contacts.entity1,
+            contacts.entity2,
+        );
     }
 }

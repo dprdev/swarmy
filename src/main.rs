@@ -40,8 +40,11 @@ fn main() {
         .add_event::<CameraEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, (camera_zoom, keyboard_input, mouse_input, mouse_wheel_input))
-        .add_systems(FixedUpdate, (player_aim, player_move, player_attack, projectile_move, projectile_despawn).chain())
-        .add_systems(PostProcessCollisions, print_collisions)
+        .add_systems(FixedUpdate, (
+            player_aim, player_move, player_attack,
+            projectile_move, projectile_collision,
+            health_cleanup
+        ).chain())
         .insert_resource(Gravity(Vec2::ZERO))
         ;
 
@@ -79,12 +82,13 @@ fn setup(
     ));
 }
 
-fn print_collisions(mut collision_event_reader: EventReader<Collision>) {
-    for Collision(contacts) in collision_event_reader.read() {
-        println!(
-            "Entities {} and {} are colliding",
-            contacts.entity1,
-            contacts.entity2,
-     );
+fn health_cleanup(
+    mut commands: Commands,
+    q_health: Query<(Entity, &Health)>,
+) {
+    for (e, health) in q_health.iter() {
+        if health.0 <= 0.0 {
+            commands.entity(e).despawn();
+        }
     }
 }
