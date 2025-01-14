@@ -16,7 +16,7 @@ impl Default for Projectile {
     fn default() -> Projectile {
         Projectile {
             displacement: 0.0,
-            range: 500.0,
+            range: 750.0,
             damage: 1.0,
             speed: DEFAULT_PROJECTILE_SPEED,
         }
@@ -24,7 +24,7 @@ impl Default for Projectile {
 }
 
 fn projectile_rigidbody() -> RigidBody {
-    RigidBody::Kinematic
+    RigidBody::Dynamic
 }
 
 fn projectile_collider() -> Collider {

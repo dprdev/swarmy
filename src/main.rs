@@ -1,17 +1,20 @@
 use bevy::prelude::*;
 use avian2d::prelude::*;
+use std::time::Duration;
 
 mod consts;
 mod player;
 mod projectile;
 mod input;
 mod camera;
+mod swarm;
 
 use consts::*;
 use player::*;
 use projectile::*;
 use input::*;
 use camera::*;
+use swarm::*;
 
 #[cfg(debug_assertions)]
 mod debug;
@@ -34,16 +37,20 @@ fn main() {
             PhysicsPlugins::default()
         ))
         .init_state::<AppState>()
-        .register_type::<(Health, Projectile, Building)>()
+        .register_type::<(Health, Projectile, SwarmSpawner, Player, Swarmling)>()
         .add_event::<PlayerMovementEvent>()
         .add_event::<PlayerAttackEvent>()
         .add_event::<CameraEvent>()
+        .add_event::<PlayerDamageEvent>()
+        .add_event::<PlayerDeathEvent>()
         .add_systems(Startup, setup)
-        .add_systems(Update, (camera_zoom, keyboard_input, mouse_input, mouse_wheel_input))
+        .add_systems(Update, (
+            camera_zoom, keyboard_input, mouse_input,
+            mouse_wheel_input, swarmling_spawn))
         .add_systems(FixedUpdate, (
             player_aim, player_move, player_attack,
-            projectile_move, projectile_collision,
-            health_cleanup
+            projectile_move, projectile_collision, swarmling_move,
+            player_collision, player_take_damage, player_death, health_cleanup
         ).chain())
         .insert_resource(Gravity(Vec2::ZERO))
         ;
@@ -66,11 +73,14 @@ fn setup(
         Sprite {
             image: assets.load("sprites/astronaut/astronaut.png"),
             ..default()
-        }
+        },
+        Health(1.),
+        CollidingEntities::default()
     ));
     commands.spawn((
-        Building,
-        Name::new("Building".to_string()),
+        SwarmSpawner{
+            spawn_timer: Timer::new(Duration::from_secs(DEFAULT_SPAWN_TIMER as u64), TimerMode::Repeating)
+        },
         Sprite {
             image: assets.load("sprites/hatchery/hatchery.png"),
             ..default()
@@ -87,7 +97,7 @@ fn health_cleanup(
     q_health: Query<(Entity, &Health)>,
 ) {
     for (e, health) in q_health.iter() {
-        if health.0 <= 0.0 {
+        if health.0 <= 0.1 {
             commands.entity(e).despawn();
         }
     }
