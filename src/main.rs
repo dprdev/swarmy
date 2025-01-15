@@ -48,7 +48,7 @@ fn main() {
             camera_zoom, keyboard_input, mouse_input,
             mouse_wheel_input, swarmling_spawn))
         .add_systems(FixedUpdate, (
-            player_aim, player_move, player_attack,
+            player_aim, player_move, camera_follow, player_attack,
             projectile_move, projectile_collision, swarmling_move,
             player_collision, player_take_damage, player_death, health_cleanup
         ).chain())
@@ -97,7 +97,9 @@ fn health_cleanup(
     q_health: Query<(Entity, &Health)>,
 ) {
     for (e, health) in q_health.iter() {
-        if health.0 <= 0.1 {
+        if health.0 < 0.1 {
+            info!("Entity {} is dead", e);
+            info!("Health is {:?}", health);
             commands.entity(e).despawn();
         }
     }

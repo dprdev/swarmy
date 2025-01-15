@@ -40,7 +40,7 @@ pub fn swarmling_spawn(
                     ..default()
                 },
                 swarmling_transform,
-                ExternalImpulse::new(Vector::new(0., 50000.))
+                ExternalImpulse::new(Vector::new(0., 10000.))
             ));
         }
     }
@@ -50,12 +50,12 @@ pub fn swarmling_move(
     mut q_swarmling: Query<(&mut Transform, &mut LinearVelocity), (With<Swarmling>, Without<Player>)>,
     q_player: Query<(&Transform), (With<Player>, Without<Swarmling>)>
 ) {
-    for (mut swarmling_transform, mut linear_velocity) in q_swarmling.iter_mut() {
+    for (swarmling_transform, mut linear_velocity) in q_swarmling.iter_mut() {
         if let Ok(player_transform) = q_player.get_single() {
             let player_position = player_transform.translation;
             let direction = player_position - swarmling_transform.translation;
             let normalized_direction = direction.normalize_or_zero();
-            let speed = 10.;
+            let speed = 3.;
             linear_velocity.0 += normalized_direction.truncate() * speed;
         }
     }

@@ -25,7 +25,7 @@ impl Plugin for DebugPlugin {
             },
         });
         app.add_plugins(PhysicsDebugPlugin::default());
-        app.add_systems(PostProcessCollisions, print_collisions);
+        // app.add_systems(PostProcessCollisions, print_collisions);
     }
 }
 

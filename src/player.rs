@@ -50,16 +50,16 @@ pub fn player_aim(
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform)>
 ) {
-    let window = q_window.single();
-
-    if let Some(cursor_position) = window.cursor_position() {
-        let (camera, camera_global_transform) = q_camera.single();
-        if let Ok(cursor_world_position) = camera.viewport_to_world_2d(camera_global_transform, cursor_position) {
-            if let Ok(mut player_transform) = q_player.get_single_mut() {
-                // Calculate the angle between the player and the cursor
-                let direction = cursor_world_position - player_transform.translation.truncate();
-                let aim_angle = direction.y.atan2(direction.x);
-                player_transform.rotation = Quat::from_rotation_z(aim_angle);
+    if let Ok(window) = q_window.get_single() {
+        if let Some(cursor_position) = window.cursor_position() {
+            let (camera, camera_global_transform) = q_camera.single();
+            if let Ok(cursor_world_position) = camera.viewport_to_world_2d(camera_global_transform, cursor_position) {
+                if let Ok(mut player_transform) = q_player.get_single_mut() {
+                    // Calculate the angle between the player and the cursor
+                    let direction = cursor_world_position - player_transform.translation.truncate();
+                    let aim_angle = direction.y.atan2(direction.x);
+                    player_transform.rotation = Quat::from_rotation_z(aim_angle);
+                }
             }
         }
     }

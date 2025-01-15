@@ -2,6 +2,7 @@ use avian2d::prelude::*;
 use avian2d::math::Scalar;
 use bevy::prelude::*;
 use crate::consts::*;
+use crate::player::*;
 
 #[derive(Component, Reflect)]
 #[require(Sprite, Name(|| "Projectile"), RigidBody(projectile_rigidbody), Collider(projectile_collider), CollidingEntities)]
@@ -49,7 +50,7 @@ pub fn projectile_move(
 pub fn projectile_collision(
     mut commands: Commands,
     q_projectile: Query<(Entity, &Projectile, &CollidingEntities)>,
-    mut q_health: Query<&mut Health, With<Collider>>
+    mut q_health: Query<&mut Health, (With<Collider>, Without<Player>)>
 ) {
     for (projectile_entity, projectile, colliding_entities) in q_projectile.iter() {
         if projectile.displacement > projectile.range {
@@ -60,9 +61,9 @@ pub fn projectile_collision(
             for colliding_entity in colliding_entities.iter() {
                 if let Ok(mut health) = q_health.get_mut(*colliding_entity) {
                     health.0 -= projectile.damage;
+                    commands.entity(projectile_entity).despawn();
                 }
             }
-            commands.entity(projectile_entity).despawn();
         }
     }
 }
