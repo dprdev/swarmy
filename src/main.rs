@@ -98,8 +98,6 @@ fn health_cleanup(
 ) {
     for (e, health) in q_health.iter() {
         if health.0 < 0.1 {
-            info!("Entity {} is dead", e);
-            info!("Health is {:?}", health);
             commands.entity(e).despawn();
         }
     }

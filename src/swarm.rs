@@ -1,12 +1,34 @@
 use avian2d::math::Vector;
 use bevy::prelude::*;
 use avian2d::prelude::*;
+use bevy::math::ops::sin;
 use crate::consts::*;
 use crate::player::*;
 
 #[derive(Component, Reflect)]
 #[require(Sprite, Name(|| "Swarmling"), Health, Collider(swarmling_collider), RigidBody(swarmling_rigidbody))]
-pub struct Swarmling{}
+pub struct Swarmling{
+    state: BehaviorState
+}
+
+impl Default for Swarmling{
+    fn default() -> Self {
+        Swarmling {
+            state: BehaviorState::default()
+        }
+    }
+}
+
+#[derive(Reflect, Default)]
+enum BehaviorState{
+    WanderAlone,
+    WanderSwarm,
+    FleeAlone,
+    FleeSwarm,
+    #[default]
+    AttackAlone,
+    AttackSwarm,
+}
 
 #[derive(Component, Reflect)]
 #[require(Name(|| "SwarmSpawner"))]
@@ -34,29 +56,45 @@ pub fn swarmling_spawn(
             let mut swarmling_transform = transform.clone();
             swarmling_transform.translation.y += 55.;
             commands.spawn((
-                Swarmling {},
+                Swarmling::default(),
                 Sprite {
                     image: assets.load("sprites/bug/bug.png"),
                     ..default()
                 },
                 swarmling_transform,
-                ExternalImpulse::new(Vector::new(0., 10000.))
+                ExternalImpulse::new(Vector::new(0., 25000.))
             ));
         }
     }
 }
 
 pub fn swarmling_move(
-    mut q_swarmling: Query<(&mut Transform, &mut LinearVelocity), (With<Swarmling>, Without<Player>)>,
-    q_player: Query<(&Transform), (With<Player>, Without<Swarmling>)>
+    mut q_swarmling: Query<(&mut Transform, &mut LinearVelocity, &mut ExternalImpulse, &Swarmling), (Without<Player>)>,
+    q_player: Query<&Transform, (With<Player>, Without<Swarmling>)>
 ) {
-    for (swarmling_transform, mut linear_velocity) in q_swarmling.iter_mut() {
-        if let Ok(player_transform) = q_player.get_single() {
-            let player_position = player_transform.translation;
-            let direction = player_position - swarmling_transform.translation;
-            let normalized_direction = direction.normalize_or_zero();
-            let speed = 3.;
-            linear_velocity.0 += normalized_direction.truncate() * speed;
+    let player_transform = q_player.get_single();
+    for (swarmling_transform, mut linear_velocity, mut external_impulse, swarmling) in q_swarmling.iter_mut() {
+        match swarmling.state {
+            BehaviorState::WanderAlone => {
+                match player_transform {
+                    Ok(player_transform) => {},
+                    _ => {}
+                }
+            },
+            BehaviorState::FleeAlone => {},
+            BehaviorState::AttackAlone => {
+                if let Ok(player_transform) = q_player.get_single() {
+                    let direction = player_transform.translation - swarmling_transform.translation;
+                    let normalized_direction = direction.normalize_or_zero().truncate();
+                    let speed = 10.;
+                    linear_velocity.x += sin(normalized_direction.x) * speed;
+                    linear_velocity.y += sin(normalized_direction.y) * speed;
+                } else {
+                    linear_velocity.x += sin(linear_velocity.x) * 50.;
+                    linear_velocity.y += sin(linear_velocity.y) * 50.;
+                };
+            },
+            _ => {}
         }
     }
 }
