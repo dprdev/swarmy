@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use avian2d::prelude::*;
 use std::time::Duration;
+use fastnoise_lite::*;
 
 mod consts;
 mod player;
@@ -37,7 +38,7 @@ fn main() {
             PhysicsPlugins::default()
         ))
         .init_state::<AppState>()
-        .register_type::<(Health, Projectile, SwarmSpawner, Player, Swarmling)>()
+        .register_type::<(Health, Projectile, SwarmSpawner, Player)>()
         .add_event::<PlayerMovementEvent>()
         .add_event::<PlayerAttackEvent>()
         .add_event::<CameraEvent>()
@@ -79,7 +80,7 @@ fn setup(
     ));
     commands.spawn((
         SwarmSpawner{
-            spawn_timer: Timer::new(Duration::from_secs(DEFAULT_SPAWN_TIMER as u64), TimerMode::Repeating)
+            spawn_timer: Timer::new(Duration::from_secs(SWARMLING_SPAWN_TIMER as u64), TimerMode::Repeating)
         },
         Sprite {
             image: assets.load("sprites/hatchery/hatchery.png"),
