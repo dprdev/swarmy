@@ -43,12 +43,9 @@ impl Default for Swarmling{
 #[derive(Reflect, Default)]
 enum BehaviorState{
     #[default]
-    WanderAlone,
-    WanderSwarm,
-    FleeAlone,
-    FleeSwarm,
-    AttackAlone,
-    AttackSwarm,
+    Wander,
+    Flee,
+    Attack
 }
 
 #[derive(Component, Reflect)]
@@ -94,32 +91,29 @@ pub fn swarmling_move(
     q_player: Query<&Transform, (With<Player>, Without<Swarmling>)>,
     time: Res<Time>
 ) {
-    let player_transform = q_player.get_single();
-    for (swarmling_transform, mut linear_velocity, mut external_impulse, swarmling) in q_swarmling.iter_mut() {
-        match swarmling.state {
-            BehaviorState::WanderAlone => {
-                match player_transform {
-                    Ok(player_transform) => {
-                        external_impulse.x += swarmling.path_noise.get_noise_2d(time.elapsed_secs(), 0.0) * SWARMLING_SPEED;
-                        external_impulse.y += swarmling.path_noise.get_noise_2d(0.0, time.elapsed_secs()) * SWARMLING_SPEED;
-                    }
-                    Err(_) => {}
-                }
-            },
-            BehaviorState::FleeAlone => {},
-            BehaviorState::AttackAlone => {},
-            BehaviorState::AttackSwarm => {
-                if let Ok(player_transform) = q_player.get_single() {
-                    let direction = player_transform.translation - swarmling_transform.translation;
-                    let normalized_direction = direction.normalize_or_zero().truncate();
-                    linear_velocity.x += sin(normalized_direction.x) * SWARMLING_SPEED;
-                    linear_velocity.y += sin(normalized_direction.y) * SWARMLING_SPEED;
-                } else {
-                    linear_velocity.x += sin(linear_velocity.x) * 50.;
-                    linear_velocity.y += sin(linear_velocity.y) * 50.;
-                };
+    if let Ok(player_transform) = q_player.get_single() {
+        for (swarmling_transform,
+            mut linear_velocity,
+            mut external_impulse,
+            swarmling) in q_swarmling.iter_mut() {
+            match swarmling.state {
+                BehaviorState::Wander => {
+                    external_impulse.x += swarmling.path_noise.get_noise_2d(time.elapsed_secs(), 0.0) * SWARMLING_SPEED;
+                    external_impulse.y += swarmling.path_noise.get_noise_2d(0.0, time.elapsed_secs()) * SWARMLING_SPEED;
+                },
+                BehaviorState::Flee => {},
+                BehaviorState::Attack => {},
             }
-            _ => {}
         }
+    }
+}
+
+pub fn swarmling_behavior_control(
+    mut q_swarmling: Query<&mut Swarmling, Changed<Health>>,
+    q_player: Query<&Transform, With<Player>>
+) {
+    let player_transform = q_player.get_single().unwrap();
+    for swarmling in q_swarmling.iter_mut() {
+        //TODO
     }
 }

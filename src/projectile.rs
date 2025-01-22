@@ -19,7 +19,7 @@ impl Default for Projectile {
             displacement: 0.0,
             range: 750.0,
             damage: 1.0,
-            speed: DEFAULT_PROJECTILE_SPEED,
+            speed: PROJECTILE_SPEED,
         }
     }
 }
@@ -29,7 +29,7 @@ fn projectile_rigidbody() -> RigidBody {
 }
 
 fn projectile_collider() -> Collider {
-    Collider::rectangle(2., 2.)
+    Collider::rectangle(4., 4.)
 }
 
 pub fn projectile_move(
@@ -53,10 +53,6 @@ pub fn projectile_collision(
     mut q_health: Query<&mut Health, (With<Collider>, Without<Player>)>
 ) {
     for (projectile_entity, projectile, colliding_entities) in q_projectile.iter() {
-        if projectile.displacement > projectile.range {
-            commands.entity(projectile_entity).despawn();
-            continue;
-        }
         if !colliding_entities.is_empty() {
             for colliding_entity in colliding_entities.iter() {
                 if let Ok(mut health) = q_health.get_mut(*colliding_entity) {

@@ -8,8 +8,29 @@ use crate::projectile::*;
 use crate::swarm::*;
 
 #[derive(Component, Reflect)]
-#[require(Sprite, Name(|| "Player"), Health, Collider(player_collider), RigidBody(player_rigidbody))]
-pub struct Player;
+#[require(Sprite, Name(|| "Player"), Health, Collider(player_collider), RigidBody(player_rigidbody), Dash)]
+pub struct Player {}
+
+#[derive(Component, Reflect)]
+pub struct Dash {
+    is_dashing: bool,
+    direction: Vec2,
+    duration: f32,
+    elapsed: f32,
+    cooldown: f32,
+}
+
+impl Default for Dash {
+    fn default() -> Self {
+        Dash {
+            is_dashing: false,
+            direction: Vec2::ZERO,
+            duration: PLAYER_DASH_DURATION,
+            elapsed: 0.0,
+            cooldown: PLAYER_DASH_COOLDOWN
+        }
+    }
+}
 
 #[derive(Event)]
 pub enum PlayerDamageEvent {
@@ -30,17 +51,52 @@ fn player_rigidbody() -> RigidBody {
 }
 
 pub fn player_move(
-    mut q_player: Query<&mut LinearVelocity, With<Player>>,
+    mut q_player: Query<(&mut LinearVelocity, &mut Dash),With<Player>>,
     mut player_movement_event_reader: EventReader<PlayerMovementEvent>,
     time: Res<Time>,
 ) {
     for event in player_movement_event_reader.read() {
         match event {
             PlayerMovementEvent::Move(direction) => {
-                if let Ok(mut linear_velocity) = q_player.get_single_mut() {
-                    linear_velocity.0 = *direction * time.delta_secs() * 10000.0;
+                if let Ok((mut linear_velocity, _)) = q_player.get_single_mut() {
+                    linear_velocity.0 = *direction * PLAYER_MOVEMENT_SPEED;
+                }
+            },
+            PlayerMovementEvent::Dash(direction) => {
+                if let Ok((_, mut dash))  = q_player.get_single_mut() {
+                    if dash.cooldown <= 0.0 {
+                        dash.direction = *direction;
+                        dash.is_dashing = true;
+                    }
                 }
             }
+        }
+    }
+}
+
+pub fn player_dash(
+    mut q_player: Query<(&mut LinearVelocity, &mut Dash), With<Player>>,
+    time: Res<Time>
+) {
+    for (mut linear_velocity, mut dash) in q_player.get_single_mut() {
+        if dash.is_dashing {
+            dash.elapsed += time.delta_secs();
+            if dash.elapsed > dash.duration {
+                dash.is_dashing = false;
+                dash.direction = Vec2::ZERO;
+                dash.elapsed = 0.0;
+                dash.cooldown = PLAYER_DASH_COOLDOWN;
+                continue;
+            }
+            let progress = dash.elapsed / dash.duration;
+            let curve = EasingCurve::new(
+                dash.direction * PLAYER_DASH_SPEED, Vec2::ZERO, EaseFunction::SineOut);
+            let vel_2d = curve.sample(progress).unwrap();
+            linear_velocity.x = vel_2d.x;
+            linear_velocity.y = vel_2d.y;
+        } else if dash.cooldown > 0.0 {
+            dash.cooldown -= time.delta_secs();
+            dash.cooldown = dash.cooldown.clamp(0.0, PLAYER_DASH_COOLDOWN);
         }
     }
 }
@@ -88,7 +144,7 @@ pub fn player_attack(
                             translation: projectile_translation,
                             rotation: player_transform.rotation,
                             ..default()
-                        }
+                        },
                     ));
                 }
             }

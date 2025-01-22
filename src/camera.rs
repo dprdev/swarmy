@@ -23,7 +23,7 @@ pub fn camera_zoom(
             CameraEvent::Zoom(x) => {
                 let (mut projection, _) = q_camera.single_mut();
                 projection.scale -= x;
-                projection.scale = projection.scale.clamp(MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
+                projection.scale = projection.scale.clamp(CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
             }
         }
     }

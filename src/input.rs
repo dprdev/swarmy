@@ -7,6 +7,7 @@ use bevy::prelude::*;
 #[derive(Event)]
 pub enum PlayerMovementEvent {
     Move(Vec2),
+    Dash(Vec2)
 }
 
 #[derive(Event)]
@@ -24,18 +25,20 @@ pub fn keyboard_input(
     mut movement_event_writer: EventWriter<PlayerMovementEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    if keyboard_input.is_changed() {
-        let left = keyboard_input.any_pressed([KeyCode::KeyA, KeyCode::ArrowLeft]);
-        let right = keyboard_input.any_pressed([KeyCode::KeyD, KeyCode::ArrowRight]);
-        let up = keyboard_input.any_pressed([KeyCode::KeyW, KeyCode::ArrowUp]);
-        let down = keyboard_input.any_pressed([KeyCode::KeyS, KeyCode::ArrowDown]);
+    let left = keyboard_input.any_pressed([KeyCode::KeyA, KeyCode::ArrowLeft]);
+    let right = keyboard_input.any_pressed([KeyCode::KeyD, KeyCode::ArrowRight]);
+    let up = keyboard_input.any_pressed([KeyCode::KeyW, KeyCode::ArrowUp]);
+    let down = keyboard_input.any_pressed([KeyCode::KeyS, KeyCode::ArrowDown]);
+    let dash = keyboard_input.any_pressed([KeyCode::Space]);
 
-        let horizontal = right as i8 - left as i8;
-        let vertical = up as i8 - down as i8;
+    let horizontal = right as i8 - left as i8;
+    let vertical = up as i8 - down as i8;
 
-        let direction = Vec2::new(horizontal as Scalar, vertical as Scalar);
+    let direction = Vec2::new(horizontal as Scalar, vertical as Scalar);
 
-        movement_event_writer.send(PlayerMovementEvent::Move(direction));
+    movement_event_writer.send(PlayerMovementEvent::Move(direction));
+    if dash {
+        movement_event_writer.send(PlayerMovementEvent::Dash(direction));
     }
 }
 
