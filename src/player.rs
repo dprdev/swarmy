@@ -1,8 +1,10 @@
 use bevy::prelude::*;
 use avian2d::prelude::*;
+use bevy_hanabi::prelude::*;
 use bevy::window::PrimaryWindow;
 
 use crate::consts::*;
+use crate::DashParticleEffect;
 use crate::input::*;
 use crate::projectile::*;
 use crate::swarm::*;
@@ -75,10 +77,11 @@ pub fn player_move(
 }
 
 pub fn player_dash(
-    mut q_player: Query<(&mut LinearVelocity, &mut Dash), With<Player>>,
+    mut commands: Commands,
+    mut q_player: Query<(&mut LinearVelocity, &mut Dash, &mut EffectInitializers), With<Player>>,
     time: Res<Time>
 ) {
-    for (mut linear_velocity, mut dash) in q_player.get_single_mut() {
+    for (mut linear_velocity, mut dash, mut e_initializers) in q_player.get_single_mut() {
         if dash.is_dashing {
             dash.elapsed += time.delta_secs();
             if dash.elapsed > dash.duration {
@@ -86,6 +89,7 @@ pub fn player_dash(
                 dash.direction = Vec2::ZERO;
                 dash.elapsed = 0.0;
                 dash.cooldown = PLAYER_DASH_COOLDOWN;
+                e_initializers.reset();
                 continue;
             }
             let progress = dash.elapsed / dash.duration;

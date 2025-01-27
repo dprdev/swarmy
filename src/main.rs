@@ -45,7 +45,7 @@ fn main() {
         .add_event::<CameraEvent>()
         .add_event::<PlayerDamageEvent>()
         .add_event::<PlayerDeathEvent>()
-        .add_systems(Startup, (setup, setup_effect))
+        .add_systems(Startup, (setup_dash_particle_effect, setup).chain())
         .add_systems(Update, (
             camera_zoom, keyboard_input, mouse_input,
             mouse_wheel_input, swarmling_spawn))
@@ -68,7 +68,8 @@ fn main() {
 
 fn setup(
     mut commands: Commands,
-    assets: Res<AssetServer>
+    assets: Res<AssetServer>,
+    particle_handle: Res<DashParticleEffect>
     ) {
     commands.spawn(Camera2d);
     commands.spawn((
@@ -78,7 +79,8 @@ fn setup(
             ..default()
         },
         Health(1.),
-        CollidingEntities::default()
+        CollidingEntities::default(),
+        ParticleEffectBundle::new(particle_handle.dash_effect.clone()),
     ));
     commands.spawn((
         SwarmSpawner{
@@ -106,7 +108,13 @@ fn health_cleanup(
     }
 }
 
-fn setup_effect(
+
+#[derive(Resource)]
+struct DashParticleEffect {
+    dash_effect: Handle<EffectAsset>
+}
+
+fn setup_dash_particle_effect(
     mut effects: ResMut<Assets<EffectAsset>>,
     mut commands: Commands
 ) {
@@ -115,50 +123,63 @@ fn setup_effect(
     gradient.add_key(0.0, Vec4::new(1., 0., 0., 1.));
     gradient.add_key(1.0, Vec4::splat(0.));
 
-    // Create a new expression module
-    let mut module = Module::default();
+    //There are attributes, modifiers and properties
+    //attribute: quantity stored per particle for all particles
+    //properties: named variable stored per effect (cannot vary between particles)
+
+    let writer = ExprWriter::new();
 
     // On spawn, randomly initialize the position of the particle
     // to be over the surface of a sphere of radius 2 units.
     let init_pos = SetPositionCircleModifier {
-        center: module.lit(Vec3::ZERO),
-        axis: module.lit(Vec3::X),
-        radius: module.lit(2.),
+        center: writer.lit(Vec3::ZERO).expr(),
+        axis: writer.lit(Vec3::Y).expr(),
+        radius: writer.lit(2.).expr(),
         dimension: ShapeDimension::Surface,
     };
+
+    // Initialize the particle size to a specific value
+    let init_size = SetAttributeModifier::new(
+        Attribute::SIZE,
+        writer.lit(3.).expr() // Set the size to 2.0 (default is usually 1.0)
+    );
 
     // Also initialize a radial initial velocity to 6 units/sec
     // away from the (same) sphere center.
     let init_vel = SetVelocityCircleModifier {
-        center: module.lit(Vec3::ZERO),
-        axis: module.lit(Vec3::X),
-        speed: module.lit(6.),
+        center: writer.lit(Vec3::ZERO).expr(),
+        axis: writer.lit(Vec3::X).expr(),
+        speed: writer.lit(12.).expr(),
     };
 
     // Initialize the total lifetime of the particle, that is
     // the time for which it's simulated and rendered. This modifier
     // is almost always required, otherwise the particles won't show.
-    let lifetime = module.lit(10.); // literal value "10.0"
+    let lifetime = writer.lit(10.).expr(); // literal value "10.0"
     let init_lifetime = SetAttributeModifier::new(
         Attribute::LIFETIME, lifetime);
 
     // Every frame, add a gravity-like acceleration downward
-    let accel = module.lit(Vec3::new(0., -3., 0.));
+    let accel = writer.lit(Vec3::new(0., -3., 0.)).expr();
     let update_accel = AccelModifier::new(accel);
+
+    // Create a new expression module
+    let mut module = writer.finish();
 
     // Create the effect asset
     let effect = EffectAsset::new(
         // Maximum number of particles alive at a time
         32768,
         // Spawn at a rate of 5 particles per second
-        Spawner::rate(5.0.into()),
+        Spawner::once(100.0.into(), false),
         // Move the expression module into the asset
         module
     )
-        .with_name("TestEffect")
+        .with_name("DashParticleEffect")
         .init(init_pos)
         .init(init_vel)
         .init(init_lifetime)
+        .init(init_size)
         .update(update_accel)
         // Render the particles with a color gradient over their
         // lifetime. This maps the gradient key 0 to the particle spawn
@@ -168,10 +189,7 @@ fn setup_effect(
     // Insert into the asset system
     let effect_handle = effects.add(effect);
 
-    commands
-        .spawn(ParticleEffectBundle {
-            effect: ParticleEffect::new(effect_handle),
-            transform: Transform::from_translation(Vec3::Y),
-            ..Default::default()
-        });
+    commands.insert_resource(DashParticleEffect {
+        dash_effect: effect_handle,
+    });
 }
