@@ -133,37 +133,39 @@ fn setup_dash_particle_effect(
     // to be over the surface of a sphere of radius 2 units.
     let init_pos = SetPositionCircleModifier {
         center: writer.lit(Vec3::ZERO).expr(),
-        axis: writer.lit(Vec3::Y).expr(),
-        radius: writer.lit(2.).expr(),
-        dimension: ShapeDimension::Surface,
+        axis: writer.lit(Vec3::Z).expr(),
+        radius: writer.lit(3.).expr(),
+        dimension: ShapeDimension::Volume,
     };
 
     // Initialize the particle size to a specific value
     let init_size = SetAttributeModifier::new(
         Attribute::SIZE,
-        writer.lit(3.).expr() // Set the size to 2.0 (default is usually 1.0)
+        writer.lit(2.).expr() // Set the size to 2.0 (default is usually 1.0)
     );
+
+    info!("{:?}", Attribute::all());
 
     // Also initialize a radial initial velocity to 6 units/sec
     // away from the (same) sphere center.
     let init_vel = SetVelocityCircleModifier {
         center: writer.lit(Vec3::ZERO).expr(),
-        axis: writer.lit(Vec3::X).expr(),
-        speed: writer.lit(12.).expr(),
+        axis: writer.lit(Vec3::Z).expr(),
+        speed: writer.lit(8.).expr(),
     };
 
     // Initialize the total lifetime of the particle, that is
     // the time for which it's simulated and rendered. This modifier
     // is almost always required, otherwise the particles won't show.
-    let lifetime = writer.lit(10.).expr(); // literal value "10.0"
+    let lifetime = writer.lit(3.).expr(); // literal value "10.0"
     let init_lifetime = SetAttributeModifier::new(
         Attribute::LIFETIME, lifetime);
 
     // Every frame, add a gravity-like acceleration downward
-    let accel = writer.lit(Vec3::new(0., -3., 0.)).expr();
+    let accel = writer.lit(Vec3::new(0., 0., 0.)).expr();
     let update_accel = AccelModifier::new(accel);
-
-    // Create a new expression module
+    
+    // Create a new expression module from the writer
     let mut module = writer.finish();
 
     // Create the effect asset

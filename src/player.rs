@@ -58,17 +58,19 @@ pub fn player_move(
     time: Res<Time>,
 ) {
     for event in player_movement_event_reader.read() {
-        match event {
-            PlayerMovementEvent::Move(direction) => {
-                if let Ok((mut linear_velocity, _)) = q_player.get_single_mut() {
-                    linear_velocity.0 = *direction * PLAYER_MOVEMENT_SPEED;
-                }
-            },
-            PlayerMovementEvent::Dash(direction) => {
-                if let Ok((_, mut dash))  = q_player.get_single_mut() {
-                    if dash.cooldown <= 0.0 {
-                        dash.direction = *direction;
-                        dash.is_dashing = true;
+        if let Ok((mut linear_velocity, mut dash)) = q_player.get_single_mut() {
+            if dash.is_dashing {
+                continue;
+            } else {
+                match event {
+                    PlayerMovementEvent::Move(direction) => {
+                        linear_velocity.0 = *direction * PLAYER_MOVEMENT_SPEED;
+                    }
+                    PlayerMovementEvent::Dash(direction) => {
+                        if dash.cooldown <= 0.0 {
+                            dash.direction = *direction;
+                            dash.is_dashing = true;
+                        }
                     }
                 }
             }
@@ -84,12 +86,12 @@ pub fn player_dash(
     for (mut linear_velocity, mut dash, mut e_initializers) in q_player.get_single_mut() {
         if dash.is_dashing {
             dash.elapsed += time.delta_secs();
+            e_initializers.reset();
             if dash.elapsed > dash.duration {
                 dash.is_dashing = false;
                 dash.direction = Vec2::ZERO;
                 dash.elapsed = 0.0;
                 dash.cooldown = PLAYER_DASH_COOLDOWN;
-                e_initializers.reset();
                 continue;
             }
             let progress = dash.elapsed / dash.duration;
