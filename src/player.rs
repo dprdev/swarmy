@@ -4,10 +4,10 @@ use bevy_hanabi::prelude::*;
 use bevy::window::PrimaryWindow;
 
 use crate::consts::*;
-use crate::DashParticleEffect;
 use crate::input::*;
 use crate::projectile::*;
 use crate::swarm::*;
+use crate::particles::*;
 
 #[derive(Component, Reflect)]
 #[require(Sprite, Name(|| "Player"), Health, Collider(player_collider), RigidBody(player_rigidbody), Dash)]

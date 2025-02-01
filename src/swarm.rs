@@ -1,11 +1,11 @@
 use avian2d::math::Vector;
 use bevy::prelude::*;
 use avian2d::prelude::*;
-use bevy::ecs::query::QuerySingleError;
 use bevy::math::ops::sin;
 use fastnoise_lite::{FastNoiseLite, NoiseType};
 use crate::consts::*;
 use crate::player::*;
+use crate::particles::*;
 
 #[derive(Resource)]
 pub struct SwarmNoise {

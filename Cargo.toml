@@ -13,7 +13,7 @@ opt-level = 2
 [dependencies]
 avian2d = "0.2.0"
 bevy = "0.15.1"
-bevy-inspector-egui = "0.28.1"
+bevy-inspector-egui = "0.29.1"
 fastnoise-lite = "1.1.1"
 fastrand = "2.3.0"
 bevy_hanabi = { version = "0.14", default-features = false, features = [ "2d" ] }
