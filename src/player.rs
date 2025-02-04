@@ -1,13 +1,12 @@
-use bevy::prelude::*;
 use avian2d::prelude::*;
-use bevy_hanabi::prelude::*;
+use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use bevy_hanabi::prelude::*;
 
 use crate::consts::*;
 use crate::input::*;
 use crate::projectile::*;
 use crate::swarm::*;
-use crate::particles::*;
 
 #[derive(Component, Reflect)]
 #[require(Sprite, Name(|| "Player"), Health, Collider(player_collider), RigidBody(player_rigidbody), Dash)]
@@ -29,7 +28,7 @@ impl Default for Dash {
             direction: Vec2::ZERO,
             duration: PLAYER_DASH_DURATION,
             elapsed: 0.0,
-            cooldown: PLAYER_DASH_COOLDOWN
+            cooldown: PLAYER_DASH_COOLDOWN,
         }
     }
 }
@@ -53,9 +52,8 @@ fn player_rigidbody() -> RigidBody {
 }
 
 pub fn player_move(
-    mut q_player: Query<(&mut LinearVelocity, &mut Dash),With<Player>>,
-    mut player_movement_event_reader: EventReader<PlayerMovementEvent>,
-    time: Res<Time>,
+    mut q_player: Query<(&mut LinearVelocity, &mut Dash), With<Player>>,
+    mut player_movement_event_reader: EventReader<PlayerMovementEvent>
 ) {
     for event in player_movement_event_reader.read() {
         if let Ok((mut linear_velocity, mut dash)) = q_player.get_single_mut() {
@@ -79,9 +77,8 @@ pub fn player_move(
 }
 
 pub fn player_dash(
-    mut commands: Commands,
     mut q_player: Query<(&mut LinearVelocity, &mut Dash, &mut EffectInitializers), With<Player>>,
-    time: Res<Time>
+    time: Res<Time>,
 ) {
     for (mut linear_velocity, mut dash, mut e_initializers) in q_player.get_single_mut() {
         if dash.is_dashing {
@@ -96,7 +93,10 @@ pub fn player_dash(
             }
             let progress = dash.elapsed / dash.duration;
             let curve = EasingCurve::new(
-                dash.direction * PLAYER_DASH_SPEED, Vec2::ZERO, EaseFunction::SineOut);
+                dash.direction * PLAYER_DASH_SPEED,
+                Vec2::ZERO,
+                EaseFunction::SineOut,
+            );
             let vel_2d = curve.sample(progress).unwrap();
             linear_velocity.x = vel_2d.x;
             linear_velocity.y = vel_2d.y;
@@ -110,12 +110,14 @@ pub fn player_dash(
 pub fn player_aim(
     mut q_player: Query<&mut Transform, With<Player>>,
     q_window: Query<&Window, With<PrimaryWindow>>,
-    q_camera: Query<(&Camera, &GlobalTransform)>
+    q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
     if let Ok(window) = q_window.get_single() {
         if let Some(cursor_position) = window.cursor_position() {
             let (camera, camera_global_transform) = q_camera.single();
-            if let Ok(cursor_world_position) = camera.viewport_to_world_2d(camera_global_transform, cursor_position) {
+            if let Ok(cursor_world_position) =
+                camera.viewport_to_world_2d(camera_global_transform, cursor_position)
+            {
                 if let Ok(mut player_transform) = q_player.get_single_mut() {
                     // Calculate the angle between the player and the cursor
                     let direction = cursor_world_position - player_transform.translation.truncate();
@@ -131,7 +133,7 @@ pub fn player_attack(
     mut commands: Commands,
     assets: Res<AssetServer>,
     q_player: Query<&Transform, With<Player>>,
-    mut player_attack_event_reader: EventReader<PlayerAttackEvent>
+    mut player_attack_event_reader: EventReader<PlayerAttackEvent>,
 ) {
     for event in player_attack_event_reader.read() {
         match event {
@@ -161,12 +163,13 @@ pub fn player_attack(
 pub fn player_collision(
     q_player: Query<&CollidingEntities, With<Player>>,
     mut q_swarmling: Query<Entity, With<Swarmling>>,
-    mut player_damage_event_writer: EventWriter<PlayerDamageEvent>
+    mut player_damage_event_writer: EventWriter<PlayerDamageEvent>,
 ) {
     if let Ok(colliding_entities) = q_player.get_single() {
         for entity in colliding_entities.iter() {
-            if let Ok(mut health) = q_swarmling.get_mut(*entity) {
-                player_damage_event_writer.send(PlayerDamageEvent::Collision(SWARMLING_COLLISION_DAMAGE));
+            if let Ok(health) = q_swarmling.get_mut(*entity) {
+                player_damage_event_writer
+                    .send(PlayerDamageEvent::Collision(SWARMLING_COLLISION_DAMAGE));
             }
         }
     }
@@ -175,7 +178,7 @@ pub fn player_collision(
 pub fn player_take_damage(
     mut q_player: Query<&mut Health, With<Player>>,
     mut player_damage_event_reader: EventReader<PlayerDamageEvent>,
-    mut player_death_event_writer: EventWriter<PlayerDeathEvent>
+    mut player_death_event_writer: EventWriter<PlayerDeathEvent>,
 ) {
     for event in player_damage_event_reader.read() {
         match event {
@@ -192,10 +195,8 @@ pub fn player_take_damage(
     }
 }
 
-pub fn player_death(
-    mut player_death_event_reader: EventReader<PlayerDeathEvent>
-) {
-    for event in player_death_event_reader.read() {
+pub fn player_death(mut player_death_event_reader: EventReader<PlayerDeathEvent>) {
+    for _event in player_death_event_reader.read() {
         info!("PLAYER IS DEAD, YOU NOOB");
     }
 }

@@ -1,13 +1,13 @@
 use avian2d::math::Scalar;
-use bevy::input::{ButtonInput, ButtonState};
 use bevy::input::mouse::{MouseButtonInput, MouseScrollUnit, MouseWheel};
+use bevy::input::{ButtonInput, ButtonState};
 use bevy::math::Vec2;
 use bevy::prelude::*;
 
 #[derive(Event)]
 pub enum PlayerMovementEvent {
     Move(Vec2),
-    Dash(Vec2)
+    Dash(Vec2),
 }
 
 #[derive(Event)]
@@ -44,13 +44,15 @@ pub fn keyboard_input(
 
 pub fn mouse_input(
     mut mouse_btn_event: EventReader<MouseButtonInput>,
-    mut attack_event_writer: EventWriter<PlayerAttackEvent>
+    mut attack_event_writer: EventWriter<PlayerAttackEvent>,
 ) {
     for event in mouse_btn_event.read() {
         if event.state == ButtonState::Pressed {
             match event.button {
-                MouseButton::Left => {attack_event_writer.send(PlayerAttackEvent::PrimaryFire);},
-                _ => continue
+                MouseButton::Left => {
+                    attack_event_writer.send(PlayerAttackEvent::PrimaryFire);
+                }
+                _ => continue,
             }
         }
     }
@@ -58,15 +60,15 @@ pub fn mouse_input(
 
 pub fn mouse_wheel_input(
     mut mouse_wheel_event: EventReader<MouseWheel>,
-    mut camera_event_writer: EventWriter<CameraEvent>
+    mut camera_event_writer: EventWriter<CameraEvent>,
 ) {
     for event in mouse_wheel_event.read() {
         match event.unit {
             MouseScrollUnit::Line => {
                 camera_event_writer.send(CameraEvent::Zoom(event.y));
-            },
+            }
             MouseScrollUnit::Pixel => {
-                camera_event_writer.send(CameraEvent::Zoom(event.y/100.));
+                camera_event_writer.send(CameraEvent::Zoom(event.y / 100.));
             }
         }
     }

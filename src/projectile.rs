@@ -1,12 +1,12 @@
-use avian2d::prelude::*;
-use avian2d::math::Scalar;
-use bevy::prelude::*;
 use crate::consts::*;
 use crate::player::*;
+use avian2d::math::Scalar;
+use avian2d::prelude::*;
+use bevy::prelude::*;
 
 #[derive(Component, Reflect)]
 #[require(Sprite, Name(|| "Projectile"), RigidBody(projectile_rigidbody), Collider(projectile_collider), CollidingEntities)]
-pub struct Projectile{
+pub struct Projectile {
     displacement: Scalar,
     range: Scalar,
     damage: Scalar,
@@ -50,7 +50,7 @@ pub fn projectile_move(
 pub fn projectile_collision(
     mut commands: Commands,
     q_projectile: Query<(Entity, &Projectile, &CollidingEntities)>,
-    mut q_health: Query<&mut Health, (With<Collider>, Without<Player>)>
+    mut q_health: Query<&mut Health, (With<Collider>, Without<Player>)>,
 ) {
     for (projectile_entity, projectile, colliding_entities) in q_projectile.iter() {
         if !colliding_entities.is_empty() {

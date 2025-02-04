@@ -1,11 +1,11 @@
+use crate::consts::*;
+use avian2d::prelude::*;
 use bevy::{
     dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin},
     prelude::*,
     text::FontSmoothing,
 };
 use bevy_inspector_egui::quick::{StateInspectorPlugin, WorldInspectorPlugin};
-use avian2d::prelude::*;
-use crate::consts::*;
 
 pub struct DebugPlugin;
 
@@ -18,7 +18,7 @@ impl Plugin for DebugPlugin {
                 text_config: TextFont {
                     font_size: 42.0,
                     font: default(),
-                    font_smoothing:FontSmoothing::default(),
+                    font_smoothing: FontSmoothing::default(),
                 },
                 text_color: Color::srgb(1.0, 0.0, 0.0),
                 enabled: true,
@@ -33,8 +33,7 @@ fn print_collisions(mut collision_event_reader: EventReader<Collision>) {
     for Collision(contacts) in collision_event_reader.read() {
         println!(
             "Entities {} and {} are colliding",
-            contacts.entity1,
-            contacts.entity2,
+            contacts.entity1, contacts.entity2,
         );
     }
 }

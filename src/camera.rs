@@ -1,11 +1,11 @@
-use bevy::prelude::*;
 use crate::consts::*;
 use crate::input::*;
 use crate::player::Player;
+use bevy::prelude::*;
 
 pub fn camera_follow(
-    q_player: Query<& Transform, (With<Player>, Without<Camera>)>,
-    mut q_camera: Query<&mut Transform, (With<Camera>, Without<Player>)>
+    q_player: Query<&Transform, (With<Player>, Without<Camera>)>,
+    mut q_camera: Query<&mut Transform, (With<Camera>, Without<Player>)>,
 ) {
     if let Ok(player_transform) = q_player.get_single() {
         if let Ok(mut camera_transform) = q_camera.get_single_mut() {
@@ -16,7 +16,7 @@ pub fn camera_follow(
 
 pub fn camera_zoom(
     mut camera_event: EventReader<CameraEvent>,
-    mut q_camera: Query<(&mut OrthographicProjection, &mut Transform), With<Camera>>
+    mut q_camera: Query<(&mut OrthographicProjection, &mut Transform), With<Camera>>,
 ) {
     for event in camera_event.read() {
         match event {
