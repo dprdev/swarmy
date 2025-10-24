@@ -57,8 +57,8 @@ pub fn projectile_collision(
             for colliding_entity in colliding_entities.iter() {
                 if let Ok(mut health) = q_health.get_mut(*colliding_entity) {
                     health.0 -= projectile.damage;
-                    commands.entity(projectile_entity).despawn();
                 }
+                commands.entity(projectile_entity).despawn();
             }
         }
     }

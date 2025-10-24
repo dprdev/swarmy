@@ -131,6 +131,11 @@ pub fn swarmling_behavior_control(
     }
 }
 
+pub fn swarmling_take_damage(
+    mut q_swarmling: Query<(&mut Health, &Swarmling)>
+) {
+    //TODO
+}
 pub fn swarmling_death(
     mut q_swarmling: Query<
         (Entity, &Health, &mut EffectInitializers),
